@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <canvas id="canvas2"></canvas>
+    <script>
+        // 加密
+        // 文字像素矩阵和原图像素矩阵对比，找出文字像素在原图上的像素位置
+        // 无文字区域的像素点，且R为奇数，将R+-1改为偶数 | 有文字区域的像素点，且R为偶数，将R+-1改为奇数
+        // 最后，无文字的像素点全部为偶数，有文字的像素点全为奇数
+        function encrypt() {
+            const canvas = document.getElementById('canvas')
+            const ctx = canvas.getContext('2d')
+
+            let originalData
+            let textData;
+
+            canvas.width = 254
+            canvas.height = 254
+            const image = new Image()
+            image.src = './1.jpg'
+            image.onload = function () {
+                ctx.font = '50px 宋体';
+                ctx.fillStyle = '#000000'
+                ctx.textAlign = 'right'
+                ctx.fillText('Issho-lin', canvas.width - 20, canvas.height - 20);
+                textData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height).data;
+
+                ctx.drawImage(image, 0, 0);
+
+                originalData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const oData = originalData.data
+                console.log([...oData]);
+                for (let i = 0; i < oData.length; i += 4) {
+                    if (textData[i + 3] === 0 && oData[i] % 2 === 1 || textData[i + 3] !== 0 && oData[i] % 2 === 0) {
+                        if (oData[i] === 255) {
+                            oData[i]--
+                        } else {
+                            oData[i]++
+                        }
+                    }
+                }
+                ctx.putImageData(originalData, 0, 0)
+            }
+        }
+        // 解密
+        // 找出全为奇数的像素点，添加文字颜色
+        function decrypt() {
+            const canvas = document.getElementById('canvas2')
+            const ctx = canvas.getContext('2d')
+            let originalData
+            canvas.width = 254
+            canvas.height = 254
+            const image = new Image()
+            image.src = './2.png'
+            image.onload = function () {
+                ctx.drawImage(image, 0, 0)
+                originalData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+                const oData = originalData.data
+                for (let i = 0; i < oData.length; i += 4) {
+                    if (oData[i] % 2 === 1) {
+                        oData[i] = 0
+                        oData[i + 1] = 0
+                        oData[i + 2] = 0
+                    }
+                }
+                ctx.putImageData(originalData, 0, 0)
+            }
+        }
+        encrypt()
+        decrypt()
+
+    </script>
+</body>
+
+</html>
